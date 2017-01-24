@@ -40,7 +40,7 @@ Get your license file and put it inside the directory of your Vagrantfile with t
 ### Bring up/resume UCP, DTR, and Worker nodes
 
 ```
-vagrant up 
+vagrant up
 ```
 or
 
@@ -51,7 +51,7 @@ vagrant up ucpnode01 dtrnode1 workernode01
 ### Stop UCP, DTR, and Worker nodes
 
 ```
-vagrant halt 
+vagrant halt
 ```
 or
 
@@ -61,10 +61,33 @@ vagrant halt ucpnode01 dtrnode1 workernode01
 ### Destroy UCP, DTR, and Worker nodes
 
 ```
-vagrant destroy 
+vagrant destroy
 ```
 or
 
 ```
 vagrant destroy ucpnode01 dtrnode1 workernode01
+```
+### Using Snapshots to quickly roll back
+
+I recommend installing the plugin vagrant-multiprovider-snap to take snapshots and quickly move back to old stable state. You can install the plugin with the following:
+
+```
+vagrant plugin install vagrant-multiprovider-snap
+```
+
+### Create a snapshot
+
+You should create a snapshot after the deployment of the DDC finished. You should also specify a name for the snapshot.
+
+```
+vagrant snap take --name="DDC Basic installation"
+```
+
+### Rollback to a snapshot
+
+You can simply roll back to an existing snapshot by using the following command with or without specification of the name
+
+```
+vagrant snap rollback --name="DDC Basic installation"
 ```
