@@ -88,7 +88,7 @@ Vagrant.configure(2) do |config|
     # Application Worker Node
     config.vm.define "workernode01" do |workernode01|
       workernode01.vm.box = "ubuntu/xenial64"
-      workernode01.vm.network "private_network", type: "dhcp"
+      workernode01.vm.network :private_network, ip: "192.168.3.12"
       workernode01.vm.hostname = "workernode01"
       config.vm.provider :virtualbox do |vb|
          vb.customize ["modifyvm", :id, "--memory", "2048"]
