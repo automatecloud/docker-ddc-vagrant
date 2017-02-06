@@ -22,11 +22,11 @@ Vagrant.configure(2) do |config|
          vb.customize ["modifyvm", :id, "--memory", "3072"]
          vb.customize ["modifyvm", :id, "--cpus", "2"]
          vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-         vb.name = "ucpnode01"
+         #vb.name = "ucpnode01"
       end
       ucpnode01.vm.provision "shell", inline: <<-SHELL
        sudo apt-get update
-       sudo apt-get install -y apt-transport-https ca-certificates
+       sudo apt-get install -y apt-transport-https ca-certificates ntp
        sudo curl -fsSL https://packages.docker.com/1.13/install.sh | repo=testing sh
        sudo usermod -aG docker ubuntu
        ifconfig enp0s8 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}' > /vagrant/ucpnode01-ipaddr
@@ -54,11 +54,11 @@ Vagrant.configure(2) do |config|
          vb.customize ["modifyvm", :id, "--memory", "3072"]
          vb.customize ["modifyvm", :id, "--cpus", "2"]
          vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-         vb.name = "dtrnode01"
+         #vb.name = "dtrnode01"
       end
       dtrnode01.vm.provision "shell", inline: <<-SHELL
         sudo apt-get update
-        sudo apt-get install -y apt-transport-https ca-certificates
+        sudo apt-get install -y apt-transport-https ca-certificates ntp
         sudo curl -fsSL https://packages.docker.com/1.13/install.sh | repo=testing sh
         sudo usermod -aG docker ubuntu
         ifconfig enp0s8 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}' > /vagrant/dtrnode01-ipaddr
@@ -96,11 +96,11 @@ Vagrant.configure(2) do |config|
          vb.customize ["modifyvm", :id, "--memory", "2048"]
          vb.customize ["modifyvm", :id, "--cpus", "2"]
          vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-         vb.name = "workernode01"
+         #vb.name = "workernode01"
       end
       workernode01.vm.provision "shell", inline: <<-SHELL
        sudo apt-get update
-       sudo apt-get install -y apt-transport-https ca-certificates
+       sudo apt-get install -y apt-transport-https ca-certificates ntp
        sudo curl -fsSL https://packages.docker.com/1.13/install.sh | repo=testing sh
        sudo usermod -aG docker ubuntu
        ifconfig enp0s8 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}' > /vagrant/workernode01-ipaddr
