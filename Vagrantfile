@@ -21,6 +21,7 @@ Vagrant.configure(2) do |config|
       config.vm.provider :virtualbox do |vb|
          vb.customize ["modifyvm", :id, "--memory", "3072"]
          vb.customize ["modifyvm", :id, "--cpus", "2"]
+         vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
          vb.name = "ucpnode01"
       end
       ucpnode01.vm.provision "shell", inline: <<-SHELL
@@ -52,6 +53,7 @@ Vagrant.configure(2) do |config|
       config.vm.provider :virtualbox do |vb|
          vb.customize ["modifyvm", :id, "--memory", "3072"]
          vb.customize ["modifyvm", :id, "--cpus", "2"]
+         vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
          vb.name = "dtrnode01"
       end
       dtrnode01.vm.provision "shell", inline: <<-SHELL
@@ -93,6 +95,7 @@ Vagrant.configure(2) do |config|
       config.vm.provider :virtualbox do |vb|
          vb.customize ["modifyvm", :id, "--memory", "2048"]
          vb.customize ["modifyvm", :id, "--cpus", "2"]
+         vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
          vb.name = "workernode01"
       end
       workernode01.vm.provision "shell", inline: <<-SHELL
