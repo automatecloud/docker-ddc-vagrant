@@ -16,7 +16,7 @@ Vagrant.configure(2) do |config|
     # UCP 2.1 node for DDC
     config.vm.define "ucpnode01" do |ucpnode01|
       ucpnode01.vm.box = "ubuntu/xenial64"
-      ucpnode01.vm.network "private_network", type: "dhcp"
+      ucpnode01.vm.network :private_network, ip: "192.168.3.10"
       ucpnode01.vm.hostname = "ucpnode01"
       config.vm.provider :virtualbox do |vb|
          vb.customize ["modifyvm", :id, "--memory", "3072"]
@@ -47,7 +47,7 @@ Vagrant.configure(2) do |config|
     # DTR Node 1 for DDC setup
     config.vm.define "dtrnode01" do |dtrnode01|
       dtrnode01.vm.box = "ubuntu/xenial64"
-      dtrnode01.vm.network "private_network", type: "dhcp"
+      dtrnode01.vm.network :private_network, ip: "192.168.3.11"
       dtrnode01.vm.hostname = "dtrnode01"
       config.vm.provider :virtualbox do |vb|
          vb.customize ["modifyvm", :id, "--memory", "3072"]
