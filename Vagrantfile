@@ -27,8 +27,16 @@ Vagrant.configure(2) do |config|
       ucpnode01.vm.provision "shell", inline: <<-SHELL
        sudo apt-get update
        sudo apt-get install -y apt-transport-https ca-certificates ntp
+       #Trust self-signed certificates
+       cp /vagrant/config/input/certificates/ca.pem /usr/local/share/ca-certificates/ca.crt
+       sudo update-ca-certificates
+       # Start Installations
        sudo curl -fsSL https://packages.docker.com/1.13/install.sh | repo=testing sh
        sudo usermod -aG docker ubuntu
+       docker volume create --name ucp-controller-server-certs
+       cp /vagrant/config/input/certificates/ca.pem /var/lib/docker/volumes/ucp-controller-server-certs/_data/ca.pem
+       cp /vagrant/config/input/certificates/UCPcrt.pem /var/lib/docker/volumes/ucp-controller-server-certs/_data/cert.pem
+       cp /vagrant/config/input/certificates/UCPkey.pem /var/lib/docker/volumes/ucp-controller-server-certs/_data/key.pem
        ifconfig enp0s8 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}' > /vagrant/ucpnode01-ipaddr
        export UCP_IPADDR=$(cat /vagrant/ucpnode01-ipaddr)
        export UCP_PASSWORD=$(cat /vagrant/ucp_password)
@@ -36,7 +44,7 @@ Vagrant.configure(2) do |config|
        export HUB_PASSWORD=$(cat /vagrant/hub_password)
        docker login -u ${HUB_USERNAME} -p ${HUB_PASSWORD}
        docker pull docker/ucp:2.1.0-beta2
-       docker run --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock -v /vagrant/docker_113_beta_subscription.lic:/config/docker_subscription.lic docker/ucp:2.1.0-beta2 install --host-address ${UCP_IPADDR} --admin-password ${UCP_PASSWORD}
+       docker run --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock -v /vagrant/docker_113_beta_subscription.lic:/config/docker_subscription.lic docker/ucp:2.1.0-beta2 install --host-address ${UCP_IPADDR} --admin-password ${UCP_PASSWORD} --san ucp.andreasmac.local --external-server-cert
        docker swarm join-token manager | awk -F " " '/token/ {print $2}' > /vagrant/swarm-join-token-mgr
        docker swarm join-token worker | awk -F " " '/token/ {print $2}' > /vagrant/swarm-join-token-worker
        docker run --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock docker/ucp:2.1.0-beta2 id | awk '{ print $1}' > /vagrant/ucpnode01-id
@@ -59,6 +67,9 @@ Vagrant.configure(2) do |config|
       dtrnode01.vm.provision "shell", inline: <<-SHELL
         sudo apt-get update
         sudo apt-get install -y apt-transport-https ca-certificates ntp
+        #Trust self-signed certificates
+        cp /vagrant/config/input/certificates/ca.pem /usr/local/share/ca-certificates/ca.crt
+        sudo update-ca-certificates
         sudo curl -fsSL https://packages.docker.com/1.13/install.sh | repo=testing sh
         sudo usermod -aG docker ubuntu
         ifconfig enp0s8 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}' > /vagrant/dtrnode01-ipaddr
@@ -101,6 +112,9 @@ Vagrant.configure(2) do |config|
       workernode01.vm.provision "shell", inline: <<-SHELL
        sudo apt-get update
        sudo apt-get install -y apt-transport-https ca-certificates ntp
+       #Trust self-signed certificates
+       cp /vagrant/config/input/certificates/ca.pem /usr/local/share/ca-certificates/ca.crt
+       sudo update-ca-certificates
        sudo curl -fsSL https://packages.docker.com/1.13/install.sh | repo=testing sh
        sudo usermod -aG docker ubuntu
        ifconfig enp0s8 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}' > /vagrant/workernode01-ipaddr
