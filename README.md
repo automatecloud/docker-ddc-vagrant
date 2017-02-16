@@ -43,10 +43,10 @@ Create the following files with necessary environment informations inside the di
 * input/ucp_password (the password that should be used for the ucp admin)
 * input/hub_username (the username of your DockerID Hub account)
 * input/hub_password (the password of zour DockerID Hub account)
-* input/ucp_image (name of the image to use for UCP installation)
-* input/dtr_image (name of the image to use for DTR installation)
-* input/ucp_san (the UCP SAN used within your UCP certificates)
-* input/ucp_url (the complete UCP URL ex. https:/)
+* input/ucp_image (name of the image to use for UCP installation ex. docker/ucp:2.1.0)
+* input/dtr_image (name of the image to use for DTR installation ex. docker/dtr:2.2.0)
+* input/ucp_san (the UCP SAN used within your UCP certificates ex. ucp.laptop.local)
+* input/ucp_url (the complete UCP URL ex. https://ucp.laptop.local)
 
 Copy the following certificates into the config certificates folder (If you don't have certificates please find insctructions below:
 
