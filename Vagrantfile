@@ -42,9 +42,10 @@ Vagrant.configure(2) do |config|
        export HUB_USERNAME=$(cat /vagrant/input/hub_username)
        export HUB_PASSWORD=$(cat /vagrant/input/hub_password)
        export UCP_IMAGE=$(cat /vagrant/input/ucp_image)
+       export UCP_SAN=$(cat /vagrant/input/ucp_san)
        docker login -u ${HUB_USERNAME} -p ${HUB_PASSWORD}
        docker pull ${UCP_IMAGE}
-       docker run --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock -v /vagrant/input/docker_subscription.lic:/config/docker_subscription.lic ${UCP_IMAGE} install --host-address ${UCP_IPADDR} --admin-password ${UCP_PASSWORD} --san ucp.andreasmac.local --external-server-cert
+       docker run --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock -v /vagrant/input/docker_subscription.lic:/config/docker_subscription.lic ${UCP_IMAGE} install --host-address ${UCP_IPADDR} --admin-password ${UCP_PASSWORD} --san ${UCP_SAN} --external-server-cert
        docker swarm join-token manager | awk -F " " '/token/ {print $2}' > /vagrant/exchange/swarm-join-token-mgr
        docker swarm join-token worker | awk -F " " '/token/ {print $2}' > /vagrant/exchange/swarm-join-token-worker
        docker run --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock ${UCP_IMAGE} id | awk '{ print $1}' > /vagrant/exchange/ucpnode01-id
@@ -84,6 +85,7 @@ Vagrant.configure(2) do |config|
         export DTR_REPLICA_ID=$(cat /vagrant/exchange/dtr-replica-id)
         export UCP_IMAGE=$(cat /vagrant/input/ucp_image)
         export DTR_IMAGE=$(cat /vagrant/input/dtr_image)
+        export UCP_URL=$(cat /vagrant/input/ucp_url)
         docker pull ${UCP_IMAGE}
         docker pull ${DTR_IMAGE}
         docker swarm join --token ${SWARM_JOIN_TOKEN_WORKER} ${UCP_IPADDR}:2377
@@ -91,7 +93,7 @@ Vagrant.configure(2) do |config|
         sleep 30
         # Install DTR
         curl -k https://ucp.andreasmac.local/ca > ucp-ca.pem
-        docker run --rm ${DTR_IMAGE} install --hub-username ${HUB_USERNAME} --hub-password ${HUB_PASSWORD} --ucp-url https://ucp.andreasmac.local --ucp-node dtrnode01 --replica-id $DTR_REPLICA_ID --dtr-external-url ${DTR_IPADDR} --ucp-username admin --ucp-password ${UCP_PASSWORD} --ucp-ca "$(cat ucp-ca.pem)"
+        docker run --rm ${DTR_IMAGE} install --hub-username ${HUB_USERNAME} --hub-password ${HUB_PASSWORD} --ucp-url ${UCP_URL} --ucp-node dtrnode01 --replica-id $DTR_REPLICA_ID --dtr-external-url ${DTR_IPADDR} --ucp-username admin --ucp-password ${UCP_PASSWORD} --ucp-ca "$(cat ucp-ca.pem)"
         # Run backup of DTR
         docker run --rm ${DTR_IMAGE} backup --ucp-url https://ucp.anderasmac.local --existing-replica-id ${DTR_REPLICA_ID} --ucp-username admin --ucp-password ${UCP_PASSWORD} --ucp-ca "$(cat ucp-ca.pem)" > /vagrant/output/backup.tar
         # Trust self-signed DTR CA

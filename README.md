@@ -45,6 +45,8 @@ Create the following files with necessary environment informations inside the di
 * input/hub_password (the password of zour DockerID Hub account)
 * input/ucp_image (name of the image to use for UCP installation)
 * input/dtr_image (name of the image to use for DTR installation)
+* input/ucp_san (the UCP SAN used within your UCP certificates)
+* input/ucp_url (the complete UCP URL ex. https:/)
 
 Copy the following certificates into the config certificates folder (If you don't have certificates please find insctructions below:
 
@@ -58,7 +60,7 @@ Configure your Mac OS local keychain to trust the certificates by using the Keyc
 
 ### License file
 
-Get your license file and put it inside the directory input of your Vagrantfile with the name docker_subscription.lic
+Get your license file on Docker Hub and put it inside the directory input of your Vagrantfile with the name input/docker_subscription.lic
 
 ### Create your own CA and Certificates for UCP and DTR
 
