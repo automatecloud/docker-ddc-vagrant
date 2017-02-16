@@ -32,9 +32,11 @@ https://www.virtualbox.org/wiki/Downloads
 
 ### Environment variables
 
-The following folders are part of the repository:
+The following folder is part of the repository:
 
 input - folder with all necessary input configuration files
+
+You need to create the following folders by yourself
 output - folder with output (backup)
 exchange - folder with exchange information needed between nodes
 
