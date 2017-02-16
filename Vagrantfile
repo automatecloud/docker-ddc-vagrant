@@ -22,34 +22,34 @@ Vagrant.configure(2) do |config|
          vb.customize ["modifyvm", :id, "--memory", "3072"]
          vb.customize ["modifyvm", :id, "--cpus", "2"]
          vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-         #vb.name = "ucpnode01"
       end
       ucpnode01.vm.provision "shell", inline: <<-SHELL
        sudo apt-get update
        sudo apt-get install -y apt-transport-https ca-certificates ntp
        #Trust self-signed certificates
-       cp /vagrant/config/input/certificates/ca.pem /usr/local/share/ca-certificates/ca.crt
+       cp /vagrant/input/certificates/ca.pem /usr/local/share/ca-certificates/ca.crt
        sudo update-ca-certificates
        # Start Installations
        sudo curl -fsSL https://packages.docker.com/1.13/install.sh | repo=testing sh
        sudo usermod -aG docker ubuntu
        docker volume create --name ucp-controller-server-certs
-       cp /vagrant/config/input/certificates/ca.pem /var/lib/docker/volumes/ucp-controller-server-certs/_data/ca.pem
-       cp /vagrant/config/input/certificates/UCPcrt.pem /var/lib/docker/volumes/ucp-controller-server-certs/_data/cert.pem
-       cp /vagrant/config/input/certificates/UCPkey.pem /var/lib/docker/volumes/ucp-controller-server-certs/_data/key.pem
-       ifconfig enp0s8 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}' > /vagrant/ucpnode01-ipaddr
-       export UCP_IPADDR=$(cat /vagrant/ucpnode01-ipaddr)
-       export UCP_PASSWORD=$(cat /vagrant/ucp_password)
-       export HUB_USERNAME=$(cat /vagrant/hub_username)
-       export HUB_PASSWORD=$(cat /vagrant/hub_password)
+       cp /vagrant/input/certificates/ca.pem /var/lib/docker/volumes/ucp-controller-server-certs/_data/ca.pem
+       cp /vagrant/input/certificates/UCPcrt.pem /var/lib/docker/volumes/ucp-controller-server-certs/_data/cert.pem
+       cp /vagrant/input/certificates/UCPkey.pem /var/lib/docker/volumes/ucp-controller-server-certs/_data/key.pem
+       ifconfig enp0s8 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}' > /vagrant/exchange/ucpnode01-ipaddr
+       export UCP_IPADDR=$(cat /vagrant/exchange/ucpnode01-ipaddr)
+       export UCP_PASSWORD=$(cat /vagrant/input/ucp_password)
+       export HUB_USERNAME=$(cat /vagrant/input/hub_username)
+       export HUB_PASSWORD=$(cat /vagrant/input/hub_password)
+       export UCP_IMAGE=$(cat /vagrant/input/ucp_image)
        docker login -u ${HUB_USERNAME} -p ${HUB_PASSWORD}
-       docker pull docker/ucp:2.1.0-beta2
-       docker run --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock -v /vagrant/docker_113_beta_subscription.lic:/config/docker_subscription.lic docker/ucp:2.1.0-beta2 install --host-address ${UCP_IPADDR} --admin-password ${UCP_PASSWORD} --san ucp.andreasmac.local --external-server-cert
-       docker swarm join-token manager | awk -F " " '/token/ {print $2}' > /vagrant/swarm-join-token-mgr
-       docker swarm join-token worker | awk -F " " '/token/ {print $2}' > /vagrant/swarm-join-token-worker
-       docker run --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock docker/ucp:2.1.0-beta2 id | awk '{ print $1}' > /vagrant/ucpnode01-id
-       export UCP_ID=$(cat /vagrant/ucpnode01-id)
-       docker run --rm -i --name ucp -v /var/run/docker.sock:/var/run/docker.sock docker/ucp:2.1.0-beta2 backup --id ${UCP_ID} --root-ca-only --passphrase "secret" > /vagrant/backup.tar
+       docker pull ${UCP_IMAGE}
+       docker run --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock -v /vagrant/input/docker_subscription.lic:/config/docker_subscription.lic ${UCP_IMAGE} install --host-address ${UCP_IPADDR} --admin-password ${UCP_PASSWORD} --san ucp.andreasmac.local --external-server-cert
+       docker swarm join-token manager | awk -F " " '/token/ {print $2}' > /vagrant/exchange/swarm-join-token-mgr
+       docker swarm join-token worker | awk -F " " '/token/ {print $2}' > /vagrant/exchange/swarm-join-token-worker
+       docker run --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock ${UCP_IMAGE} id | awk '{ print $1}' > /vagrant/exchange/ucpnode01-id
+       export UCP_ID=$(cat /vagrant/exchange/ucpnode01-id)
+       docker run --rm -i --name ucp -v /var/run/docker.sock:/var/run/docker.sock ${UCP_IMAGE} backup --id ${UCP_ID} --root-ca-only --passphrase "secret" > /vagrant/output/backupucp.tar
       SHELL
     end
 
@@ -68,35 +68,37 @@ Vagrant.configure(2) do |config|
         sudo apt-get update
         sudo apt-get install -y apt-transport-https ca-certificates ntp
         #Trust self-signed certificates
-        cp /vagrant/config/input/certificates/ca.pem /usr/local/share/ca-certificates/ca.crt
+        cp /vagrant/input/certificates/ca.pem /usr/local/share/ca-certificates/ca.crt
         sudo update-ca-certificates
         sudo curl -fsSL https://packages.docker.com/1.13/install.sh | repo=testing sh
         sudo usermod -aG docker ubuntu
-        ifconfig enp0s8 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}' > /vagrant/dtrnode01-ipaddr
-        export HUB_USERNAME=$(cat /vagrant/hub_username)
-        export HUB_PASSWORD=$(cat /vagrant/hub_password)
+        ifconfig enp0s8 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}' > /vagrant/exchange/dtrnode01-ipaddr
+        export HUB_USERNAME=$(cat /vagrant/input/hub_username)
+        export HUB_PASSWORD=$(cat /vagrant/input/hub_password)
         docker login -u ${HUB_USERNAME} -p ${HUB_PASSWORD}
-        cat /dev/urandom | tr -dc 'a-f0-9' | fold -w 12 | head -n 1 > /vagrant/dtr-replica-id
-        export UCP_PASSWORD=$(cat /vagrant/ucp_password)
-        export UCP_IPADDR=$(cat /vagrant/ucpnode01-ipaddr)
-        export DTR_IPADDR=$(cat /vagrant/dtrnode01-ipaddr)
-        export SWARM_JOIN_TOKEN_WORKER=$(cat /vagrant/swarm-join-token-worker)
-        export DTR_REPLICA_ID=$(cat /vagrant/dtr-replica-id)
-        docker pull docker/ucp:2.1.0-
+        cat /dev/urandom | tr -dc 'a-f0-9' | fold -w 12 | head -n 1 > /vagrant/exchange/dtr-replica-id
+        export UCP_PASSWORD=$(cat /vagrant/input/ucp_password)
+        export UCP_IPADDR=$(cat /vagrant/exchange/uqcpnode01-ipaddr)
+        export DTR_IPADDR=$(cat /vagrant/exchange/dtrnode01-ipaddr)
+        export SWARM_JOIN_TOKEN_WORKER=$(cat /vagrant/exchange/swarm-join-token-worker)
+        export DTR_REPLICA_ID=$(cat /vagrant/exchange/dtr-replica-id)
+        export UCP_IMAGE=$(cat /vagrant/input/ucp_image)
+        export DTR_IMAGE=$(cat /vagrant/input/dtr_image)
+        docker pull ${UCP_IMAGE}
+        docker pull ${DTR_IMAGE}
         docker swarm join --token ${SWARM_JOIN_TOKEN_WORKER} ${UCP_IPADDR}:2377
         # Wait for Join to complete
         sleep 30
         # Install DTR
         curl -k https://ucp.andreasmac.local/ca > ucp-ca.pem
-        docker run --rm docker/dtr:2.2.0-beta2 install --hub-username ${HUB_USERNAME} --hub-password ${HUB_PASSWORD} --ucp-url https://ucp.andreasmac.local --ucp-node dtrnode01 --replica-id $DTR_REPLICA_ID --dtr-external-url dtrnode01 --ucp-username admin --ucp-password ${UCP_PASSWORD} --ucp-ca "$(cat ucp-ca.pem)"
-        # docker run --rm docker/dtr:2.2.0-beta2 install --hub-username ${HUB_USERNAME} --hub-password ${HUB_PASSWORD} --ucp-url https://ucp.andreasmac.local --ucp-node dtrnode01 --replica-id $DTR_REPLICA_ID --dtr-external-url dtr.andreasmac.local --ucp-username admin --ucp-password ${UCP_PASSWORD} --ucp-ca "$(cat ucp-ca.pem)" --dtr-ca "$(cat /vagrant/config/input/certificates/ca.pem)" --dtr-cert "$(cat /vagrant/config/input/certificates/DTRcrt.pem)" --dtr-key "$(cat /vagrant/config/input/certificates/DTRkey.pem)"
-        # docker run --rm ${DTR_IMAGE} install --hub-username ${HUB_USERNAME} --hub-password ${HUB_PASSWORD} --ucp-url https://$UCP_HOSTNAME --ucp-node dtr --replica-id $DTR_REPLICA_ID --dtr-external-url $DTR_HOSTNAME --ucp-username admin --ucp-password ${UCP_PASSWORD} --ucp-ca "$(cat /vagrant/config/output/ucp-ca.pem)" --dtr-ca "$(cat /vagrant/config/input/certificates/ca.pem)" --dtr-cert "$(cat /vagrant/config/input/certificates/DTRcrt.pem)" --dtr-key "$(cat /vagrant/config/input/certificates/DTRkey.pem)"
+        docker run --rm ${DTR_IMAGE} install --hub-username ${HUB_USERNAME} --hub-password ${HUB_PASSWORD} --ucp-url https://ucp.andreasmac.local --ucp-node dtrnode01 --replica-id $DTR_REPLICA_ID --dtr-external-url ${DTR_IPADDR} --ucp-username admin --ucp-password ${UCP_PASSWORD} --ucp-ca "$(cat ucp-ca.pem)"
         # Run backup of DTR
-        docker run --rm docker/dtr:2.2.0-beta2 backup --ucp-url https://ucp.anderasmac.local --existing-replica-id ${DTR_REPLICA_ID} --ucp-username admin --ucp-password ${UCP_PASSWORD} --ucp-ca "$(cat ucp-ca.pem)" > /tmp/backup.tar
+        docker run --rm ${DTR_IMAGE} backup --ucp-url https://ucp.anderasmac.local --existing-replica-id ${DTR_REPLICA_ID} --ucp-username admin --ucp-password ${UCP_PASSWORD} --ucp-ca "$(cat ucp-ca.pem)" > /vagrant/output/backup.tar
         # Trust self-signed DTR CA
         openssl s_client -connect ${DTR_IPADDR}:443 -showcerts </dev/null 2>/dev/null | openssl x509 -outform PEM | sudo tee /usr/local/share/ca-certificates/${DTR_IPADDR}.crt
         sudo update-ca-certificates
         sudo service docker restart
+        # Wait some seconds and start automate configuration
       SHELL
     end
 
@@ -115,19 +117,20 @@ Vagrant.configure(2) do |config|
        sudo apt-get update
        sudo apt-get install -y apt-transport-https ca-certificates ntp
        #Trust self-signed certificates
-       cp /vagrant/config/input/certificates/ca.pem /usr/local/share/ca-certificates/ca.crt
+       cp /vagrant/input/certificates/ca.pem /usr/local/share/ca-certificates/ca.crt
        sudo update-ca-certificates
        sudo curl -fsSL https://packages.docker.com/1.13/install.sh | repo=testing sh
        sudo usermod -aG docker ubuntu
-       ifconfig enp0s8 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}' > /vagrant/workernode01-ipaddr
-       export HUB_USERNAME=$(cat /vagrant/hub_username)
-       export HUB_PASSWORD=$(cat /vagrant/hub_password)
+       ifconfig enp0s8 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}' > /vagrant/exchange/workernode01-ipaddr
+       export HUB_USERNAME=$(cat /vagrant/input/hub_username)
+       export HUB_PASSWORD=$(cat /vagrant/input/hub_password)
+       export UCP_IMAGE=$(cat /vagrant/input/ucp_image)
        docker login -u ${HUB_USERNAME} -p ${HUB_PASSWORD}
-       docker pull docker/ucp:2.1.0-beta2
+       docker pull ${UCP_IMAGE}
        # Join Swarm as worker
-       export UCP_IPADDR=$(cat /vagrant/ucpnode01-ipaddr)
-       export DTR_IPADDR=$(cat /vagrant/dtrnode01-ipaddr)
-       export SWARM_JOIN_TOKEN_WORKER=$(cat /vagrant/swarm-join-token-worker)
+       export UCP_IPADDR=$(cat /vagrant/exchange/ucpnode01-ipaddr)
+       export DTR_IPADDR=$(cat /vagrant/exchange/dtrnode01-ipaddr)
+       export SWARM_JOIN_TOKEN_WORKER=$(cat /vagrant/exchange/swarm-join-token-worker)
        docker swarm join --token ${SWARM_JOIN_TOKEN_WORKER} ${UCP_IPADDR}:2377
        # Trust self-signed DTR CA
        openssl s_client -connect ${DTR_IPADDR}:443 -showcerts </dev/null 2>/dev/null | openssl x509 -outform PEM | sudo tee /usr/local/share/ca-certificates/${DTR_IPADDR}.crt

@@ -5,9 +5,9 @@ Vagrantfile to install Docker Datacenter
 
 The Vagrantiles installes 3 virtual machines with the following versions (Updated 2017/02/01):
 
- * CS Docker Engine 1.13 Beta
- * Docker UCP 2.1.0 Beta
- * Docker DTR 2.2.0 Beta
+ * CS Docker Engine 1.13
+ * Docker UCP 2.1.0
+ * Docker DTR 2.2.0
 
 ## Requirements
 
@@ -32,34 +32,33 @@ https://www.virtualbox.org/wiki/Downloads
 
 ### Environment variables
 
-Create the following folders within your Vagrantfile
+The following folders are part of the repository:
 
-config
-config/input
-config/input/certificates
-config/output
+input - folder with all necessary input configuration files
+output - folder with output (backup)
+exchange - folder with exchange information needed between nodes
 
 Create the following files with necessary environment informations inside the directory of your Vagrantfile:
 
-* config/input/ucp_password (the password that should be used for the ucp admin)
-* config/input/hub_username (the username of your DockerID Hub account)
-* /config/input/hub_password (the password of zour DockerID Hub account)
-* /config/input/image_ucp (name of the image to use for UCP installation)
-* /config/input/image_dtr (name of the image to use for DTR installation)
+* input/ucp_password (the password that should be used for the ucp admin)
+* input/hub_username (the username of your DockerID Hub account)
+* input/hub_password (the password of zour DockerID Hub account)
+* input/image_ucp (name of the image to use for UCP installation)
+* input/image_dtr (name of the image to use for DTR installation)
 
-Copy the following certificates into the config certificates folder:
+Copy the following certificates into the config certificates folder (If you don't have certificates please find insctructions below:
 
-* CA Certificate: configuration/input/certificates/ca.pem
-* UCP Private Key: configuration/input/certificates/UCPkey.pem
-* UCP Certificate: configuration/input/certificates/UCPcrt.pem
-* DTR Private Key: configuration/input/certificates/DTRkey.pem
-* DTR Certificate: configuration/input/certificates/DTRcrt.pem
+* CA Certificate: input/certificates/ca.pem
+* UCP Private Key: input/certificates/UCPkey.pem
+* UCP Certificate: input/certificates/UCPcrt.pem
+* DTR Private Key: input/certificates/DTRkey.pem
+* DTR Certificate: input/certificates/DTRcrt.pem
 
 Configure your Mac OS local keychain to trust the certificates by using the Keychain Access tool and import the ca.pem, DTRcrt.pem and UCPkey.pem. 
 
 ### License file
 
-Get your license file and put it inside the directory config/input of your Vagrantfile with the name docker_113_beta_subscription.lic
+Get your license file and put it inside the directory input of your Vagrantfile with the name docker_subscription.lic
 
 ### Create your own CA and Certificates for UCP and DTR
 
