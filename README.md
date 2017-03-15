@@ -36,9 +36,6 @@ The following folder is part of the repository:
 
 input - folder with all necessary input configuration files
 
-You need to create the following folders by yourself
-output - folder with output (backup)
-exchange - folder with exchange information needed between nodes
 
 Create the following files with necessary environment informations inside the directory of your Vagrantfile:
 
@@ -58,7 +55,7 @@ Copy the following certificates into the config certificates folder (If you don'
 * DTR Private Key: input/certificates/DTRkey.pem
 * DTR Certificate: input/certificates/DTRcrt.pem
 
-Configure your Mac OS local keychain to trust the certificates by using the Keychain Access tool and import the ca.pem, DTRcrt.pem and UCPkey.pem. 
+Configure your Mac OS local keychain to trust the certificates by using the Keychain Access tool and import the ca.pem, DTRcrt.pem and UCPkey.pem.
 
 ### License file
 
