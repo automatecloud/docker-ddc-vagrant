@@ -59,7 +59,7 @@ Configure your Mac OS local keychain to trust the certificates by using the Keyc
 
 ### License file
 
-Get your license file on Docker Hub and put it inside the directory input of your Vagrantfile with the name input/docker_subscription.lic
+Get your license file on Docker Store (https:/store.docker.com) and put it inside the directory input of your Vagrantfile with the name input/docker_subscription.lic
 
 ### Create your own CA and Certificates for UCP and DTR
 
