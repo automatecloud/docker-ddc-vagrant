@@ -12,7 +12,6 @@ Vagrant.configure(2) do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://atlas.hashicorp.com/search.
-
     # UCP 2.1 node for DDC
     config.vm.define "ucpnode01" do |ucpnode01|
       ucpnode01.vm.box = "ubuntu/xenial64"
@@ -21,16 +20,24 @@ Vagrant.configure(2) do |config|
       config.vm.provider :virtualbox do |vb|
          vb.customize ["modifyvm", :id, "--memory", "3072"]
          vb.customize ["modifyvm", :id, "--cpus", "2"]
+         vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
          vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
       end
       ucpnode01.vm.provision "shell", inline: <<-SHELL
+       # Prepare repository
+       echo "Prepare repository"
+       export DOWNLOAD_LINK=$(cat /vagrant/input/download-link)
        sudo apt-get update
-       sudo apt-get install -y apt-transport-https ca-certificates ntp
+       sudo apt-get install -y apt-transport-https ca-certificates ntp curl software-properties-common
+       curl -fsSL ${DOWNLOAD_LINK}/gpg | sudo apt-key add -
+       sudo add-apt-repository "deb [arch=amd64] ${DOWNLOAD_LINK} $(lsb_release -cs) stable-17.03"
+       sudo apt-get update
+       # Install Docker EE
+       echo "Install Docker EE"
+       sudo apt-get -y install docker-ee
        #Trust self-signed certificates
        cp /vagrant/input/certificates/ca.pem /usr/local/share/ca-certificates/ca.crt
        sudo update-ca-certificates
-       # Start Installations
-       sudo curl -fsSL https://packages.docker.com/1.13/install.sh | repo=testing sh
        sudo usermod -aG docker ubuntu
        docker volume create --name ucp-controller-server-certs
        cp /vagrant/input/certificates/ca.pem /var/lib/docker/volumes/ucp-controller-server-certs/_data/ca.pem
@@ -62,16 +69,25 @@ Vagrant.configure(2) do |config|
       config.vm.provider :virtualbox do |vb|
          vb.customize ["modifyvm", :id, "--memory", "3072"]
          vb.customize ["modifyvm", :id, "--cpus", "2"]
+         vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
          vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
          #vb.name = "dtrnode01"
       end
       dtrnode01.vm.provision "shell", inline: <<-SHELL
+        # Prepare repository
+        echo "Prepare repository"
+        export DOWNLOAD_LINK=$(cat /vagrant/input/download-link)
         sudo apt-get update
-        sudo apt-get install -y apt-transport-https ca-certificates ntp
+        sudo apt-get install -y apt-transport-https ca-certificates ntp curl software-properties-common
+        curl -fsSL ${DOWNLOAD_LINK}/gpg | sudo apt-key add -
+        sudo add-apt-repository "deb [arch=amd64] ${DOWNLOAD_LINK} $(lsb_release -cs) stable-17.03"
+        sudo apt-get update
+        # Install Docker EE
+        echo "Install Docker EE"
+        sudo apt-get -y install docker-ee
         #Trust self-signed certificates
         cp /vagrant/input/certificates/ca.pem /usr/local/share/ca-certificates/ca.crt
         sudo update-ca-certificates
-        sudo curl -fsSL https://packages.docker.com/1.13/install.sh | repo=testing sh
         sudo usermod -aG docker ubuntu
         ifconfig enp0s8 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}' > /vagrant/exchange/dtrnode01-ipaddr
         export HUB_USERNAME=$(cat /vagrant/input/hub_username)
@@ -79,12 +95,13 @@ Vagrant.configure(2) do |config|
         docker login -u ${HUB_USERNAME} -p ${HUB_PASSWORD}
         cat /dev/urandom | tr -dc 'a-f0-9' | fold -w 12 | head -n 1 > /vagrant/exchange/dtr-replica-id
         export UCP_PASSWORD=$(cat /vagrant/input/ucp_password)
-        export UCP_IPADDR=$(cat /vagrant/exchange/uqcpnode01-ipaddr)
+        export UCP_IPADDR=$(cat /vagrant/exchange/ucpnode01-ipaddr)
         export DTR_IPADDR=$(cat /vagrant/exchange/dtrnode01-ipaddr)
         export SWARM_JOIN_TOKEN_WORKER=$(cat /vagrant/exchange/swarm-join-token-worker)
         export DTR_REPLICA_ID=$(cat /vagrant/exchange/dtr-replica-id)
         export UCP_IMAGE=$(cat /vagrant/input/ucp_image)
         export DTR_IMAGE=$(cat /vagrant/input/dtr_image)
+        export DTR_URL=$(cat /vagrant/input/dtr_url)
         export UCP_URL=$(cat /vagrant/input/ucp_url)
         docker pull ${UCP_IMAGE}
         docker pull ${DTR_IMAGE}
@@ -92,10 +109,12 @@ Vagrant.configure(2) do |config|
         # Wait for Join to complete
         sleep 30
         # Install DTR
-        curl -k https://ucp.andreasmac.local/ca > ucp-ca.pem
-        docker run --rm ${DTR_IMAGE} install --hub-username ${HUB_USERNAME} --hub-password ${HUB_PASSWORD} --ucp-url ${UCP_URL} --ucp-node dtrnode01 --replica-id $DTR_REPLICA_ID --dtr-external-url ${DTR_IPADDR} --ucp-username admin --ucp-password ${UCP_PASSWORD} --ucp-ca "$(cat ucp-ca.pem)"
+        curl -k https://ucp.docker.vm/ca > ucp-ca.pem
+        echo docker run --rm ${DTR_IMAGE} install --hub-username ${HUB_USERNAME} --hub-password ${HUB_PASSWORD} --ucp-url ${UCP_URL} --ucp-node dtrnode01 --replica-id $DTR_REPLICA_ID --dtr-external-url ${DTR_URL} --ucp-username admin --ucp-password ${UCP_PASSWORD} --ucp-ca "$(cat /vagrant/input/certificates/ca.pem)" --dtr-ca "$(cat /vagrant/input/certificates/ca.pem)" --dtr-cert "$(cat /vagrant/input/certificates/DTRcrt.pem)" --dtr-key "$(cat /vagrant/input/certificates/DTRkey.pem)"
+        docker run --rm ${DTR_IMAGE} install --hub-username ${HUB_USERNAME} --hub-password ${HUB_PASSWORD} --ucp-url ${UCP_URL} --ucp-node dtrnode01 --replica-id $DTR_REPLICA_ID --dtr-external-url ${DTR_URL} --ucp-username admin --ucp-password ${UCP_PASSWORD} --ucp-ca "$(cat /vagrant/input/certificates/ca.pem)" --dtr-ca "$(cat /vagrant/input/certificates/ca.pem)" --dtr-cert "$(cat /vagrant/input/certificates/DTRcrt.pem)" --dtr-key "$(cat /vagrant/input/certificates/DTRkey.pem)"
+        #docker run --rm ${DTR_IMAGE} install --hub-username ${HUB_USERNAME} --hub-password ${HUB_PASSWORD} --ucp-url ${UCP_URL} --ucp-node dtrnode01 --replica-id $DTR_REPLICA_ID --dtr-external-url ${DTR_IPADDR} --ucp-username admin --ucp-password ${UCP_PASSWORD} --ucp-ca "$(cat ucp-ca.pem)"
         # Run backup of DTR
-        docker run --rm ${DTR_IMAGE} backup --ucp-url https://ucp.anderasmac.local --existing-replica-id ${DTR_REPLICA_ID} --ucp-username admin --ucp-password ${UCP_PASSWORD} --ucp-ca "$(cat ucp-ca.pem)" > /vagrant/output/backup.tar
+        docker run --rm ${DTR_IMAGE} backup --ucp-url ${UCP_URL} --existing-replica-id ${DTR_REPLICA_ID} --ucp-username admin --ucp-password ${UCP_PASSWORD} --ucp-ca "$(cat ucp-ca.pem)" > /vagrant/output/backup.tar
         # Trust self-signed DTR CA
         openssl s_client -connect ${DTR_IPADDR}:443 -showcerts </dev/null 2>/dev/null | openssl x509 -outform PEM | sudo tee /usr/local/share/ca-certificates/${DTR_IPADDR}.crt
         sudo update-ca-certificates
@@ -112,16 +131,25 @@ Vagrant.configure(2) do |config|
       config.vm.provider :virtualbox do |vb|
          vb.customize ["modifyvm", :id, "--memory", "2048"]
          vb.customize ["modifyvm", :id, "--cpus", "2"]
+         vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
          vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
          #vb.name = "workernode01"
       end
       workernode01.vm.provision "shell", inline: <<-SHELL
+       # Prepare repository
+       echo "Prepare repository"
+       export DOWNLOAD_LINK=$(cat /vagrant/input/download-link)
        sudo apt-get update
-       sudo apt-get install -y apt-transport-https ca-certificates ntp
-       #Trust self-signed certificates
+       sudo apt-get install -y apt-transport-https ca-certificates ntp curl software-properties-common
+       curl -fsSL ${DOWNLOAD_LINK}/gpg | sudo apt-key add -
+       sudo add-apt-repository "deb [arch=amd64] ${DOWNLOAD_LINK} $(lsb_release -cs) stable-17.03"
+       sudo apt-get update
+       # Install Docker EE
+       echo "Install Docker EE"
+       sudo apt-get -y install docker-ee
+       # Trust self-signed certificates
        cp /vagrant/input/certificates/ca.pem /usr/local/share/ca-certificates/ca.crt
        sudo update-ca-certificates
-       sudo curl -fsSL https://packages.docker.com/1.13/install.sh | repo=testing sh
        sudo usermod -aG docker ubuntu
        ifconfig enp0s8 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}' > /vagrant/exchange/workernode01-ipaddr
        export HUB_USERNAME=$(cat /vagrant/input/hub_username)
@@ -139,8 +167,8 @@ Vagrant.configure(2) do |config|
        sudo update-ca-certificates
        sudo service docker restart
        # Install Compose
-       curl -L https://github.com/docker/compose/releases/download/1.10.0-rc2/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
-       chmod +x /usr/local/bin/docker-compose
+       # curl -L https://github.com/docker/compose/releases/download/1.10.0-rc2/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+       # chmod +x /usr/local/bin/docker-compose
      SHELL
     end
 
@@ -177,5 +205,4 @@ Vagrant.configure(2) do |config|
   # config.push.define "atlas" do |push|
   #   push.app = "YOUR_ATLAS_USERNAME/YOUR_APPLICATION_NAME"
   # end
-
 end

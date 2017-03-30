@@ -3,11 +3,11 @@ Vagrantfile to install Docker Datacenter
 
 ## Versions
 
-The Vagrantiles installes 3 virtual machines with the following versions (Updated 2017/02/01):
+The Vagrantiles installes 3 virtual machines with the following versions (Updated 2017/03/29):
 
- * CS Docker Engine 1.13
- * Docker UCP 2.1.0
- * Docker DTR 2.2.0
+ * CS Docker Engine 17.03
+ * Docker UCP 2.1.1
+ * Docker DTR 2.2.3
 
 ## Requirements
 
@@ -30,22 +30,30 @@ vagrant plugin install vagrant-multiprovider-snap
 https://www.virtualbox.org/wiki/Downloads
 ```
 
+### General recommendations
+
+The environment is currently limited to 3 systems and you should not change the names of the systems and also not the IP addresses unless you really need to. Otherwise there is no guarantee that the setup works.
+
+1. A UCP Manager node with name ucpnode01 that will be available via the SAN ucp.docker.vm available via IP 192.168.3.10
+2. A Docker Trusted Registry UCP Worker Node dtrnode01 that will be available via the DTR dtr.docker.vm available via IP 192.168.3.11
+3. A UCP Worker Node workernode01 available via IP 192.168.3.12
+
+The UCP Swarm is not restricted to run container workload only on worker nodes.
+
 ### Environment variables
 
-The following folder is part of the repository:
-
-input - folder with all necessary input configuration files
-
+The following folder input is part of the repository and it should include all necessary configuration files
 
 Create the following files with necessary environment informations inside the directory of your Vagrantfile:
 
 * input/ucp_password (the password that should be used for the ucp admin)
-* input/hub_username (the username of your DockerID Hub account)
-* input/hub_password (the password of zour DockerID Hub account)
-* input/ucp_image (name of the image to use for UCP installation ex. docker/ucp:2.1.0)
-* input/dtr_image (name of the image to use for DTR installation ex. docker/dtr:2.2.0)
-* input/ucp_san (the UCP SAN used within your UCP certificates ex. ucp.laptop.local)
-* input/ucp_url (the complete UCP URL ex. https://ucp.laptop.local)
+* input/download-link (the individual Docker EE download link for Docker Datacenter on Ubuntu you get via store.docker.com)
+* input/hub_username (the username of your DockerID account)
+* input/hub_password (the password of zour DockerID account)
+* input/ucp_image (name of the image to use for UCP installation ex. docker/ucp:2.1.1)
+* input/dtr_image (name of the image to use for DTR installation ex. docker/dtr:2.2.3)
+* input/ucp_san (the UCP SAN used within your UCP certificates ex. ucp.docker.vm. Please don't change it)
+* input/ucp_url (the complete UCP URL ex. https://ucp.docker.vm)
 
 Copy the following certificates into the config certificates folder (If you don't have certificates please find insctructions below:
 
@@ -56,6 +64,8 @@ Copy the following certificates into the config certificates folder (If you don'
 * DTR Certificate: input/certificates/DTRcrt.pem
 
 Configure your Mac OS local keychain to trust the certificates by using the Keychain Access tool and import the ca.pem, DTRcrt.pem and UCPkey.pem.
+
+The output folder will include backups and the exchange folder informations that will be transferred between all VMs via files.
 
 ### License file
 
@@ -75,7 +85,7 @@ brew install openssl
 openssl genrsa -out CAkey.pem 2048
 ```
 
-* Use the new CA key pair to create to sign the CA certificate
+* Use the new CA key pair to create to sign the CA certificate. You should give it the CN ca.docker.vm. You can use what ever country codes etc. necessary.
 
 ```
 openssl req -new -key CAkey.pem -x509 -days 3650 -out ca.pem -sha256
@@ -87,10 +97,10 @@ openssl req -new -key CAkey.pem -x509 -days 3650 -out ca.pem -sha256
 openssl genrsa -out UCPkey.pem 2048
 ```
 
-* Use the CA to create a key pair and csr for the UCP server
+* Use the CA to create a key pair and csr for the UCP server. you should use the CA name ucp.docker.vm!
 
 ```
-openssl req -subj "/CN=ucp.andreasmac.local" -new -key UCPkey.pem -out UCP.csr -sha256
+openssl req -subj "/CN=ucp.docker.vm" -new -key UCPkey.pem -out UCP.csr -sha256
 ```
 
 * Use the CA to sign the UCP CSR
@@ -111,10 +121,10 @@ openssl x509 -req -days 3650 -in UCP.csr -CA ca.pem -CAkey CAkey.pem -CAcreatese
 openssl genrsa -out DTRkey.pem 2048
 ```
 
-* Use the CA to create a key pair and csr for the DTR server
+* Use the CA to create a key pair and csr for the DTR server. You should use the CN dtr.docker.vm!
 
 ```
-openssl req -subj "/CN=dtr.andreasmac.local" -new -key DTRkey.pem -out DTR.csr -sha256
+openssl req -subj "/CN=dtr.docker.vm" -new -key DTRkey.pem -out DTR.csr -sha256
 ```
 
 * Use the CA to sign the DTR CSR
@@ -129,7 +139,7 @@ openssl x509 -req -days 3650 -in DTR.csr -CA ca.pem -CAkey CAkey.pem -CAcreatese
  openssl rsa -in DTRkey.pem -out DTRkey.pem
 ```
 
-* Import your keys into your local MAC.
+* Import your keys into your local MAC by using the Keychain Access application. I import them always as trusted certificates, so you will have no red non trusted certificate messages within your browser.
 
 ## Usage
 
