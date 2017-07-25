@@ -30,7 +30,7 @@ Vagrant.configure(2) do |config|
        sudo apt-get update
        sudo apt-get install -y apt-transport-https ca-certificates ntp curl software-properties-common
        curl -fsSL ${DOWNLOAD_LINK}/gpg | sudo apt-key add -
-       sudo add-apt-repository "deb [arch=amd64] ${DOWNLOAD_LINK} $(lsb_release -cs) stable-17.03"
+       sudo add-apt-repository "deb [arch=amd64] ${DOWNLOAD_LINK} $(lsb_release -cs) test"
        sudo apt-get update
        # Install Docker EE
        echo "Install Docker EE"
@@ -53,8 +53,8 @@ Vagrant.configure(2) do |config|
        docker login -u ${HUB_USERNAME} -p ${HUB_PASSWORD}
        docker pull ${UCP_IMAGE}
        docker run --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock -v /vagrant/input/docker_subscription.lic:/config/docker_subscription.lic ${UCP_IMAGE} install --host-address ${UCP_IPADDR} --admin-password ${UCP_PASSWORD} --san ${UCP_SAN} --external-server-cert
-       docker swarm join-token manager | awk -F " " '/token/ {print $2}' > /vagrant/exchange/swarm-join-token-mgr
-       docker swarm join-token worker | awk -F " " '/token/ {print $2}' > /vagrant/exchange/swarm-join-token-worker
+       docker swarm join-token manager | awk -F " " '/token/ {print $5}' > /vagrant/exchange/swarm-join-token-mgr
+       docker swarm join-token worker | awk -F " " '/token/ {print $5}' > /vagrant/exchange/swarm-join-token-worker
        docker run --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock ${UCP_IMAGE} id | awk '{ print $1}' > /vagrant/exchange/ucpnode01-id
        export UCP_ID=$(cat /vagrant/exchange/ucpnode01-id)
        docker run --rm -i --name ucp -v /var/run/docker.sock:/var/run/docker.sock ${UCP_IMAGE} backup --id ${UCP_ID} --root-ca-only --passphrase "secret" > /vagrant/output/backupucp.tar
@@ -80,7 +80,7 @@ Vagrant.configure(2) do |config|
         sudo apt-get update
         sudo apt-get install -y apt-transport-https ca-certificates ntp curl software-properties-common
         curl -fsSL ${DOWNLOAD_LINK}/gpg | sudo apt-key add -
-        sudo add-apt-repository "deb [arch=amd64] ${DOWNLOAD_LINK} $(lsb_release -cs) stable-17.03"
+        sudo add-apt-repository "deb [arch=amd64] ${DOWNLOAD_LINK} $(lsb_release -cs) test"
         sudo apt-get update
         # Install Docker EE
         echo "Install Docker EE"
@@ -110,11 +110,11 @@ Vagrant.configure(2) do |config|
         sleep 30
         # Install DTR
         curl -k https://ucp.docker.vm/ca > ucp-ca.pem
-        echo docker run --rm ${DTR_IMAGE} install --hub-username ${HUB_USERNAME} --hub-password ${HUB_PASSWORD} --ucp-url ${UCP_URL} --ucp-node dtrnode01 --replica-id $DTR_REPLICA_ID --dtr-external-url ${DTR_URL} --ucp-username admin --ucp-password ${UCP_PASSWORD} --ucp-ca "$(cat /vagrant/input/certificates/ca.pem)" --dtr-ca "$(cat /vagrant/input/certificates/ca.pem)" --dtr-cert "$(cat /vagrant/input/certificates/DTRcrt.pem)" --dtr-key "$(cat /vagrant/input/certificates/DTRkey.pem)"
-        docker run --rm ${DTR_IMAGE} install --hub-username ${HUB_USERNAME} --hub-password ${HUB_PASSWORD} --ucp-url ${UCP_URL} --ucp-node dtrnode01 --replica-id $DTR_REPLICA_ID --dtr-external-url ${DTR_URL} --ucp-username admin --ucp-password ${UCP_PASSWORD} --ucp-ca "$(cat /vagrant/input/certificates/ca.pem)" --dtr-ca "$(cat /vagrant/input/certificates/ca.pem)" --dtr-cert "$(cat /vagrant/input/certificates/DTRcrt.pem)" --dtr-key "$(cat /vagrant/input/certificates/DTRkey.pem)"
+        #echo docker run --rm ${DTR_IMAGE} install --hub-username ${HUB_USERNAME} --hub-password ${HUB_PASSWORD} --ucp-url ${UCP_URL} --ucp-node dtrnode01 --replica-id $DTR_REPLICA_ID --dtr-external-url ${DTR_URL} --ucp-username admin --ucp-password ${UCP_PASSWORD} --ucp-ca "$(cat /vagrant/input/certificates/ca.pem)" --dtr-ca "$(cat /vagrant/input/certificates/ca.pem)" --dtr-cert "$(cat /vagrant/input/certificates/DTRcrt.pem)" --dtr-key "$(cat /vagrant/input/certificates/DTRkey.pem)"
+        docker run --rm ${DTR_IMAGE} install --hub-username ${HUB_USERNAME} --hub-password ${HUB_PASSWORD} --ucp-url ${UCP_URL} --ucp-node dtrnode01 --dtr-external-url ${DTR_URL} --ucp-username admin --ucp-password ${UCP_PASSWORD} --ucp-ca "$(cat /vagrant/input/certificates/ca.pem)" --dtr-ca "$(cat /vagrant/input/certificates/ca.pem)" --dtr-cert "$(cat /vagrant/input/certificates/DTRcrt.pem)" --dtr-key "$(cat /vagrant/input/certificates/DTRkey.pem)" --debug
         #docker run --rm ${DTR_IMAGE} install --hub-username ${HUB_USERNAME} --hub-password ${HUB_PASSWORD} --ucp-url ${UCP_URL} --ucp-node dtrnode01 --replica-id $DTR_REPLICA_ID --dtr-external-url ${DTR_IPADDR} --ucp-username admin --ucp-password ${UCP_PASSWORD} --ucp-ca "$(cat ucp-ca.pem)"
         # Run backup of DTR
-        docker run --rm ${DTR_IMAGE} backup --ucp-url ${UCP_URL} --existing-replica-id ${DTR_REPLICA_ID} --ucp-username admin --ucp-password ${UCP_PASSWORD} --ucp-ca "$(cat ucp-ca.pem)" > /vagrant/output/backup.tar
+        # docker run --rm ${DTR_IMAGE} backup --ucp-url ${UCP_URL} --existing-replica-id ${DTR_REPLICA_ID} --ucp-username admin --ucp-password ${UCP_PASSWORD} --ucp-ca "$(cat ucp-ca.pem)" > /vagrant/output/backup.tar
         # Trust self-signed DTR CA
         openssl s_client -connect ${DTR_IPADDR}:443 -showcerts </dev/null 2>/dev/null | openssl x509 -outform PEM | sudo tee /usr/local/share/ca-certificates/${DTR_IPADDR}.crt
         sudo update-ca-certificates
@@ -142,7 +142,7 @@ Vagrant.configure(2) do |config|
        sudo apt-get update
        sudo apt-get install -y apt-transport-https ca-certificates ntp curl software-properties-common
        curl -fsSL ${DOWNLOAD_LINK}/gpg | sudo apt-key add -
-       sudo add-apt-repository "deb [arch=amd64] ${DOWNLOAD_LINK} $(lsb_release -cs) stable-17.03"
+       sudo add-apt-repository "deb [arch=amd64] ${DOWNLOAD_LINK} $(lsb_release -cs) test"
        sudo apt-get update
        # Install Docker EE
        echo "Install Docker EE"
