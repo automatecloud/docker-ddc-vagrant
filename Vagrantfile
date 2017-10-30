@@ -57,7 +57,7 @@ Vagrant.configure(2) do |config|
        docker swarm join-token worker | awk -F " " '/token/ {print $5}' > /vagrant/exchange/swarm-join-token-worker
        docker run --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock ${UCP_IMAGE} id | awk '{ print $1}' > /vagrant/exchange/ucpnode01-id
        export UCP_ID=$(cat /vagrant/exchange/ucpnode01-id)
-       docker run --rm -i --name ucp -v /var/run/docker.sock:/var/run/docker.sock ${UCP_IMAGE} backup --id ${UCP_ID} --root-ca-only --passphrase "secret" > /vagrant/output/backupucp.tar
+       docker run --log-driver none --rm -i --name ucp -v /var/run/docker.sock:/var/run/docker.sock ${UCP_IMAGE} backup --id ${UCP_ID} --interactive > /vagrant/output/backupucp.tar
       SHELL
     end
 
