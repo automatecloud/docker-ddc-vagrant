@@ -3,11 +3,11 @@ Vagrantfile to install Docker Datacenter
 
 ## Versions
 
-The Vagrantiles installes 3 virtual machines with the following versions (Updated 2017/09/13):
+The Vagrantiles installes 3 virtual machines with the following versions (Updated 2018/01/23):
 
  * Docker Enterprise Engine 17.06 (GA)
- * Docker UCP 2.2.2
- * Docker DTR 2.3.2
+ * Docker UCP 2.2.5
+ * Docker DTR 2.4.1
 
 ## Requirements
 
@@ -50,8 +50,8 @@ Create the following files with necessary environment informations inside the di
 * input/download-link (the individual Docker EE download link for Docker Datacenter on Ubuntu you get via store.docker.com)
 * input/hub_username (the username of your DockerID account)
 * input/hub_password (the password of zour DockerID account)
-* input/ucp_image (name of the image to use for UCP installation ex. docker/ucp:2.1.1)
-* input/dtr_image (name of the image to use for DTR installation ex. docker/dtr:2.2.3)
+* input/ucp_image (name of the image to use for UCP installation ex. docker/ucp:2.2.5)
+* input/dtr_image (name of the image to use for DTR installation ex. docker/dtr:2.4.1)
 * input/ucp_san (the UCP SAN used within your UCP certificates ex. ucp.docker.vm. Please don't change it)
 * input/ucp_url (the complete UCP URL ex. https://ucp.docker.vm)
 
