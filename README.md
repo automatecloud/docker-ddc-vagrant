@@ -3,7 +3,7 @@ Vagrantfile to install Docker Datacenter
 
 ## Versions
 
-The Vagrantiles installes 3 virtual machines with the following versions (Updated 2017/09/13):
+The Vagrantiles installes 3 virtual machines with the following versions (Updated 2018/01/23):
 
  * Docker Enterprise Engine 17.06 (GA)
  * Docker UCP 2.2.5
